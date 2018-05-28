@@ -1,6 +1,7 @@
 import * as Atom from "atom"
 import * as path from "path"
 import {FileLocationQuery, Location} from "./ts"
+import {isVueFile} from "./vue"
 
 // Return line/offset position in the editor using 1-indexed coordinates
 function getEditorPosition(editor: Atom.TextEditor): Location {
@@ -21,7 +22,8 @@ export function typeScriptScopes(): ReadonlyArray<string> {
 }
 
 export function isTypescriptEditorWithPath(editor: Atom.TextEditor) {
-  return isTypescriptFile(editor.getPath()) && isTypescriptGrammar(editor)
+  return (isTypescriptFile(editor.getPath()) && isTypescriptGrammar(editor))
+    || isVueFile(editor.getPath())
 }
 
 function isTypescriptGrammar(editor: Atom.TextEditor): boolean {

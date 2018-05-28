@@ -164,6 +164,8 @@ class TypescriptEditorPane {
         const filePath = this.buffer.getPath();
         if (filePath === undefined)
             return;
+        if (filePath.match(/\.vue$/))
+            return;
         const result = await client.execute("compileOnSaveAffectedFileList", {
             file: filePath,
         });

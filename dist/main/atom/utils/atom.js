@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
+const vue_1 = require("./vue");
 // Return line/offset position in the editor using 1-indexed coordinates
 function getEditorPosition(editor) {
     const pos = editor.getCursorBufferPosition();
@@ -20,7 +21,8 @@ function typeScriptScopes() {
 }
 exports.typeScriptScopes = typeScriptScopes;
 function isTypescriptEditorWithPath(editor) {
-    return isTypescriptFile(editor.getPath()) && isTypescriptGrammar(editor);
+    return (isTypescriptFile(editor.getPath()) && isTypescriptGrammar(editor))
+        || vue_1.isVueFile(editor.getPath());
 }
 exports.isTypescriptEditorWithPath = isTypescriptEditorWithPath;
 function isTypescriptGrammar(editor) {

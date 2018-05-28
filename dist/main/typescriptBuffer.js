@@ -47,6 +47,22 @@ class TypescriptBuffer {
                 return;
             this.changedAtBatch = Date.now();
             const client = await this.state.client;
+            // trim non ts code from vue files
+            const filePath = this.buffer.getPath();
+            let content = this.buffer.getText();
+            if (filePath !== undefined && filePath.match(/\.vue$/)) {
+                content = utils_1.extractTsFromVue(content);
+                await client.execute("change", {
+                    endLine: this.buffer.getLineCount(),
+                    endOffset: this.buffer.getLastLine().length + 1,
+                    file: this.state.filePath,
+                    line: 1,
+                    offset: 1,
+                    insertString: content,
+                });
+                this.events.emit("changed");
+                return;
+            }
             for (const change of changes) {
                 const { start, oldExtent, newText } = change;
                 const end = {
@@ -118,15 +134,19 @@ class TypescriptBuffer {
     }
     async open() {
         const filePath = this.buffer.getPath();
-        if (filePath !== undefined && utils_1.isTypescriptFile(filePath)) {
+        if (filePath !== undefined && (utils_1.isTypescriptFile(filePath) || utils_1.isVueFile(filePath))) {
             this.state = {
                 client: this.getClient(filePath),
                 filePath,
             };
             const client = await this.state.client;
+            let content = this.buffer.getText();
+            if (utils_1.isVueFile(filePath)) {
+                content = utils_1.extractTsFromVue(content);
+            }
             await client.execute("open", {
                 file: this.state.filePath,
-                fileContent: this.buffer.getText(),
+                fileContent: content,
             });
             this.events.emit("opened");
         }

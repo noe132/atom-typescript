@@ -6,7 +6,8 @@
   "description": "The only TypeScript plugin you will ever need.",
   "atomTestRunner": "./node_modules/atom-ts-spec-runner/runner.js",
   "activationHooks": [
-    "language-typescript:grammar-used"
+    "language-typescript:grammar-used",
+    "language-vue:grammar-used"
   ],
   "activationCommands": {
     "atom-workspace": [

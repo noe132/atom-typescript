@@ -2,7 +2,7 @@
 // the editor panes, but is also useful for editor-less buffer changes (renameRefactor).
 import * as Atom from "atom"
 import {TypescriptServiceClient as Client} from "../client/client"
-import {isTypescriptFile} from "./atom/utils"
+import {isTypescriptFile, extractTsFromVue, isVueFile} from "./atom/utils"
 
 export class TypescriptBuffer {
   public static create(buffer: Atom.TextBuffer, getClient: (filePath: string) => Promise<Client>) {
@@ -103,16 +103,21 @@ export class TypescriptBuffer {
   private async open() {
     const filePath = this.buffer.getPath()
 
-    if (filePath !== undefined && isTypescriptFile(filePath)) {
+    if (filePath !== undefined && (isTypescriptFile(filePath) || isVueFile(filePath))) {
       this.state = {
         client: this.getClient(filePath),
         filePath,
       }
       const client = await this.state.client
 
+      let content = this.buffer.getText()
+      if (isVueFile(filePath)) {
+        content = extractTsFromVue(content)
+      }
+
       await client.execute("open", {
         file: this.state.filePath,
-        fileContent: this.buffer.getText(),
+        fileContent: content,
       })
 
       this.events.emit("opened")
@@ -162,6 +167,24 @@ export class TypescriptBuffer {
     this.changedAtBatch = Date.now()
 
     const client = await this.state.client
+
+    // trim non ts code from vue files
+    const filePath = this.buffer.getPath()
+    let content = this.buffer.getText()
+    if (filePath !== undefined && filePath.match(/\.vue$/)) {
+      content = extractTsFromVue(content)
+
+      await client.execute("change", {
+        endLine: this.buffer.getLineCount(),
+        endOffset: this.buffer.getLastLine().length + 1,
+        file: this.state.filePath,
+        line: 1,
+        offset: 1,
+        insertString: content,
+      })
+      this.events.emit("changed")
+      return
+    }
 
     for (const change of changes) {
       const {start, oldExtent, newText} = change
